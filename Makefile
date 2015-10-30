@@ -27,7 +27,9 @@ doc-man: lpass.1
 doc-html: lpass.1.html
 doc: doc-man doc-html
 
-lpass: $(patsubst %.c,%.o,$(wildcard *.c))
+lpass: $(patsubst %.c,obj/%.o,$(wildcard *.c))
+	 $(CC) -o $@ $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)
+
 %.1: %.1.txt
 	a2x --no-xmllint -f manpage $<
 %.1.html: %.1.txt
@@ -36,6 +38,13 @@ lpass: $(patsubst %.c,%.o,$(wildcard *.c))
 http.c: certificate.h
 certificate.h: thawte.pem
 	awk 'BEGIN {printf "#define CERTIFICATE_THAWTE \""} {printf "%s\\n", $$0} END {printf "\"\n"}' thawte.pem > certificate.h || rm -f certificate.h
+
+obj/%.o: %.c | obj
+	$(CC) $< -c $(CPPFLAGS) $(CFLAGS) -o $@
+
+obj:
+	mkdir obj
+
 
 install-doc: doc-man
 	@install -v -d "$(DESTDIR)$(MANDIR)/man1" && install -m 0644 -v lpass.1 "$(DESTDIR)$(MANDIR)/man1/lpass.1"
@@ -48,7 +57,8 @@ uninstall:
 	@rmdir "$(DESTDIR)$(MANDIR)/man1" "$(DESTDIR)$(BINDIR)" 2>/dev/null || true
 
 clean:
-	rm -f lpass *.o *.d lpass.1 lpass.1.html certificate.h lpass.exe
+	rm -f lpass obj/*.o *.d lpass.1 lpass.1.html certificate.h lpass.exe
+	rm -r obj
 
 analyze: clean
 	CFLAGS=-g scan-build -enable-checker alpha.core -enable-checker alpha.deadcode -enable-checker alpha.security -enable-checker alpha.unix -enable-checker security -enable-checker core -enable-checker deadcode -enable-checker unix -disable-checker alpha.core.PointerSub --view --keep-going $(MAKE) lpass
