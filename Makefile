@@ -58,7 +58,7 @@ uninstall:
 
 clean:
 	rm -f lpass obj/*.o *.d lpass.1 lpass.1.html certificate.h lpass.exe
-	rm -r obj
+	rm -rf obj
 
 analyze: clean
 	CFLAGS=-g scan-build -enable-checker alpha.core -enable-checker alpha.deadcode -enable-checker alpha.security -enable-checker alpha.unix -enable-checker security -enable-checker core -enable-checker deadcode -enable-checker unix -disable-checker alpha.core.PointerSub --view --keep-going $(MAKE) lpass
